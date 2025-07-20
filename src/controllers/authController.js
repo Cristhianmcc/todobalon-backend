@@ -16,7 +16,37 @@ class AuthController {
                 });
             }
 
-            // Buscar usuario por código de acceso
+            // Verificar si es contraseña de admin
+            const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+            if (accessCode === adminPassword) {
+                // Login como admin
+                const token = jwt.sign(
+                    { 
+                        userId: 'admin',
+                        accessCode: 'admin',
+                        name: 'Administrator',
+                        role: 'admin'
+                    },
+                    process.env.JWT_SECRET || 'todobalon-secret-key',
+                    { expiresIn: '24h' }
+                );
+
+                res.json({
+                    success: true,
+                    message: 'Login exitoso como administrador',
+                    token: token,
+                    user: {
+                        id: 'admin',
+                        name: 'Administrator',
+                        email: 'admin@todobalon.com',
+                        accessCode: 'admin',
+                        role: 'admin'
+                    }
+                });
+                return;
+            }
+
+            // Buscar usuario por código de acceso normal
             const user = await supabaseService.getUserByAccessCode(accessCode);
             
             if (!user) {
