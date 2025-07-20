@@ -16,67 +16,50 @@ app.use(helmet({
 }));
 app.use(morgan('combined'));
 
-// Configuración CORS mejorada
+// Configuración CORS simplificada y más permisiva
 app.use(cors({
-    origin: function (origin, callback) {
-        // Permitir solicitudes sin origen (móvil, Postman, etc.)
-        if (!origin) return callback(null, true);
-        
-        // Lista de orígenes permitidos
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-            'https://todobalon.netlify.app',
-            'https://main--todobalon.netlify.app', // branch deploys
-            /https:\/\/.*--todobalon\.netlify\.app$/ // preview deploys
-        ];
-        
-        // Verificar si el origen está permitido
-        const isAllowed = allowedOrigins.some(allowed => {
-            if (typeof allowed === 'string') {
-                return allowed === origin;
-            } else if (allowed instanceof RegExp) {
-                return allowed.test(origin);
-            }
-            return false;
-        });
-        
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            console.log('🚫 Origen bloqueado:', origin);
-            callback(new Error('No permitido por CORS'));
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: [
-        'Content-Type', 
-        'Authorization', 
-        'X-Requested-With', 
-        'Accept', 
-        'Origin'
+    origin: [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://todobalon.netlify.app',
+        'https://main--todobalon.netlify.app',
+        // Permitir todos los subdominios de Netlify para tu proyecto
+        /^https:\/\/[a-zA-Z0-9-]+--todobalon\.netlify\.app$/
     ],
-    preflightContinue: false,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
     optionsSuccessStatus: 200
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Headers adicionales para CORS
+// Headers adicionales más específicos
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin) {
-        res.header('Access-Control-Allow-Origin', origin);
+    
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000', 
+        'https://todobalon.netlify.app'
+    ];
+    
+    if (allowedOrigins.includes(origin) || 
+        (origin && origin.match(/^https:\/\/[a-zA-Z0-9-]+--todobalon\.netlify\.app$/))) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
     }
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
     
     if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
+        console.log('✅ Preflight request para origen:', origin);
+        return res.status(200).end();
     }
+    
     next();
 });
 
