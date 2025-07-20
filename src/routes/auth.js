@@ -10,21 +10,21 @@ const authMiddleware = require('../middleware/auth');
  * @desc    Login de usuario con código de acceso
  * @access  Public
  */
-router.post('/login', authController.login);
+router.post('/login', (req, res) => authController.login(req, res));
 
 /**
  * @route   POST /api/auth/register
  * @desc    Registro de nuevo usuario con código de autorización
  * @access  Public
  */
-router.post('/register', authController.register);
+router.post('/register', (req, res) => authController.register(req, res));
 
 /**
  * @route   POST /api/auth/generate
  * @desc    Generar código de autorización (solo admin)
  * @access  Public (pero requiere password admin)
  */
-router.post('/generate', authController.generateCode);
+router.post('/generate', (req, res) => authController.generateCode(req, res));
 
 // ====== RUTAS PROTEGIDAS ======
 
@@ -33,14 +33,14 @@ router.post('/generate', authController.generateCode);
  * @desc    Verificar token JWT
  * @access  Private
  */
-router.get('/verify', authController.verifyToken);
+router.get('/verify', (req, res) => authController.verifyToken(req, res));
 
 /**
  * @route   GET /api/auth/stats
  * @desc    Obtener estadísticas del sistema
  * @access  Private
  */
-router.get('/stats', authMiddleware, authController.getStats);
+router.get('/stats', authMiddleware, (req, res) => authController.getStats(req, res));
 
 // ====== MIDDLEWARE DE ERROR ======
 
